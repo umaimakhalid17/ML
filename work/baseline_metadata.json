@@ -1,0 +1,14 @@
+{
+  "rows": 30000,
+  "n_ctr_gap_flagged": 9759,
+  "n_low_ctr_and_stale": 10,
+  "decline_rate_overall": 0.5421,
+  "decline_rate_by_reason_code": {
+    "low_ctr_and_stale": 1.0,
+    "low_ctr_visible_page": 0.6267,
+    "not_flagged": 0.5011
+  },
+  "signal1_staleness_verdict": "MIXED",
+  "signal2_ctr_vs_position_verdict": "CONFIRMED",
+  "score_formula": "log1p(impressions_90d) * max(0, 0.5 - ctr), 0 if not (visible & position<=20 & ctr<0.5)"
+}
