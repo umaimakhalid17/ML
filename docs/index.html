@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Does a learned model beat a hand-written refresh rule? — Umaima Khalid</title>
+<meta name="description" content="A client-grouped, leakage-checked comparison of a transparent refresh rule against a logistic regression model on FlyRank's Search Intelligence starter dataset.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f7f6f2;
+    --ink:#1c2230;
+    --ink-soft:#4b5468;
+    --rule:#d8d4c8;
+    --blue:#2f5d8a;
+    --blue-soft:#e8eef4;
+    --amber:#a8631f;
+    --amber-soft:#f6ead9;
+    --good:#2f6d4f;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Source Serif 4', Georgia, serif;
+    font-size:18px; line-height:1.65;
+  }
+  .label, nav, .meta, table th, .stat-label, .credit small, footer{
+    font-family:Inter, system-ui, sans-serif;
+  }
+  a{color:var(--blue)}
+  a:hover{color:var(--amber)}
+
+  header.masthead{
+    max-width:760px; margin:0 auto; padding:64px 24px 20px;
+  }
+  .kicker{
+    font-family:Inter, sans-serif; font-size:14px; color:var(--ink-soft);
+    margin:0 0 18px;
+  }
+  h1.title{
+    font-size:clamp(28px, 5vw, 42px); line-height:1.18; font-weight:700;
+    margin:0 0 22px; letter-spacing:-0.01em;
+  }
+  .byline{
+    font-family:Inter, sans-serif; font-size:15px; color:var(--ink-soft); margin:0 0 6px;
+  }
+  .byline a{ color:var(--ink-soft); text-decoration:underline; text-decoration-color:var(--rule); }
+
+  nav.toc{
+    max-width:760px; margin:28px auto 0; padding:16px 24px;
+    border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+  }
+  nav.toc ol{
+    list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:4px 22px;
+    font-size:14px;
+  }
+  nav.toc li{ margin:0 22px 4px 0; }
+  nav.toc a{ text-decoration:none; color:var(--ink-soft) }
+  nav.toc a:hover{ color:var(--blue) }
+
+  main{max-width:760px; margin:0 auto; padding:8px 24px 100px}
+  section{margin-top:56px}
+  section h2{
+    font-size:26px; font-weight:700; margin:0 0 8px; letter-spacing:-0.005em;
+    border-bottom:2px solid var(--ink); padding-bottom:10px;
+  }
+  section h3{ font-size:19px; font-weight:700; margin:26px 0 8px; }
+  p{margin:0 0 16px}
+  ul, ol{margin:0 0 16px; padding-left:24px}
+  li{margin-bottom:8px}
+  code{
+    font-family:'Space Mono', ui-monospace, monospace; font-size:14.5px;
+    background:#eeece3; padding:1px 5px; border-radius:3px;
+  }
+  pre{
+    font-family:'Space Mono', ui-monospace, monospace; font-size:13.5px; line-height:1.6;
+    background:#20242e; color:#e8e9ec; padding:16px 18px; border-radius:6px;
+    overflow-x:auto; margin:0 0 16px;
+  }
+
+  .abstract{
+    background:var(--blue-soft); border-left:3px solid var(--blue);
+    padding:22px 26px; margin-top:26px; font-size:16.5px;
+  }
+  .abstract p{margin:0}
+
+  .lede{ font-size:20px; color:var(--ink); }
+
+  figure{ margin:26px 0; }
+  figure img{ width:100%; height:auto; display:block; border:1px solid var(--rule); background:#fff; }
+  figcaption{
+    font-family:Inter, sans-serif; font-size:14px; color:var(--ink-soft);
+    margin-top:10px; line-height:1.5;
+  }
+  figcaption b{ color:var(--ink) }
+
+  .stat-row{
+    display:flex; gap:28px; flex-wrap:wrap; margin:24px 0 28px;
+  }
+  .stat{ min-width:140px; margin:0 28px 14px 0; }
+  .stat .num{
+    font-family:Inter, sans-serif; font-weight:700; font-size:38px; line-height:1;
+    letter-spacing:-0.02em; color:var(--ink);
+  }
+  .stat .num.win{ color:var(--good); }
+  .stat .stat-label{ font-size:13.5px; color:var(--ink-soft); margin-top:6px; }
+
+  table{
+    width:100%; border-collapse:collapse; font-family:Inter, sans-serif;
+    font-size:14.5px; margin:18px 0 22px;
+  }
+  caption{ caption-side:top; text-align:left; font-size:14px; color:var(--ink-soft); padding-bottom:8px; }
+  th{
+    text-align:left; padding:8px 12px; border-top:2px solid var(--ink);
+    border-bottom:1px solid var(--ink); font-weight:600;
+  }
+  td{ padding:8px 12px; border-bottom:1px solid var(--rule); vertical-align:top; }
+  tbody tr:last-child td{ border-bottom:2px solid var(--ink); }
+  td.num, th.num{ text-align:right; font-variant-numeric:tabular-nums; }
+
+  .verdict{
+    display:inline-block; font-family:Inter, sans-serif; font-weight:600; font-size:13px;
+    padding:2px 9px; border-radius:4px; margin-left:2px;
+  }
+  .verdict.confirmed{ background:var(--blue-soft); color:var(--blue); }
+  .verdict.mixed{ background:var(--amber-soft); color:var(--amber); }
+
+  .callout{
+    border:1px solid var(--rule); background:#fdfcf9; padding:18px 22px; margin:20px 0;
+  }
+  .callout h4{
+    font-family:Inter, sans-serif; font-size:13px; font-weight:700; letter-spacing:0.02em;
+    color:var(--ink-soft); margin:0 0 8px;
+  }
+
+  .repro-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px 30px;
+    font-family:Inter, sans-serif; font-size:14.5px;
+  }
+  @media (max-width:560px){ .repro-grid{ grid-template-columns:1fr; } }
+  .repro-grid a{ text-decoration:none; }
+  .repro-grid a:hover{ text-decoration:underline; }
+
+  footer{
+    max-width:760px; margin:0 auto; padding:30px 24px 60px;
+    color:var(--ink-soft); font-size:13.5px; border-top:1px solid var(--rule);
+  }
+
+  ::selection{ background:#cfe0ef; }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <p class="kicker">FlyRank ML Internship — Capstone Research Paper</p>
+  <h1 class="title">Does a learned model beat a hand-written refresh rule — and does the honest evaluation say the same thing as the quick one?</h1>
+  <p class="byline">Umaima Khalid · <a href="https://github.com/umaimakhalid17/ML">github.com/umaimakhalid17/ML</a></p>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#abstract">Abstract</a></li>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#data">Data</a></li>
+    <li><a href="#methodology">Methodology</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#limitations">Limitations</a></li>
+    <li><a href="#recommendations">Recommendations</a></li>
+    <li><a href="#reproducibility">Reproducibility</a></li>
+    <li><a href="#credit">Data credit</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="abstract">
+  <div class="abstract">
+    <p><b>Question:</b> given a page's trailing-90-day search history, which pages should a content
+    editor refresh first — and does a learned model beat a transparent, hand-written rule at
+    answering that? <b>Data:</b> FlyRank's 30,000-row Search Intelligence starter release, 32
+    pseudonymized clients. <b>Method:</b> a rule-based baseline (visibility × CTR gap) compared
+    against logistic regression and random forest, under a client-grouped split designed to catch
+    memorization. <b>Result:</b> logistic regression beats the baseline rule at every K tested
+    (precision@50: 0.76 vs 0.62), but the gap is modest, and a naive random split would have
+    reported an optimistic AUC of 0.694 against the honest 0.604 — a 0.09-point illusion from
+    letting the model see a client's other pages during training. <b>What it's for:</b> a ranked,
+    reason-coded weekly refresh queue for a content editor — decision support, never causal
+    proof, and never an automated edit.</p>
+  </div>
+</section>
+
+<section id="intro">
+  <h2>Introduction</h2>
+  <p class="lede">A content editor at a growing site has, at best, a few hours a week and a few
+  hundred candidate pages. Right now that choice is a gut-feel sort. This project asks whether a
+  transparent rule, or a small learned model, can do meaningfully better — and whether the answer
+  changes once the evaluation is held to an honest standard.</p>
+  <p>The decision this work supports is narrow on purpose: <b>which handful of pages does an
+  editor open first this week</b>, and <b>why</b>. Every recommendation below ships with a reason
+  code a human can check before acting, because a ranked list nobody trusts is worse than no list
+  at all.</p>
+</section>
+
+<section id="data">
+  <h2>Data</h2>
+  <p><code>data/raw/content_refresh_anonymized.csv</code> — 30,000 rows, one per pseudonymized
+  content item, 32 pseudonymized clients, every metric aggregated over a trailing 90-day window
+  ending at export time.</p>
+  <p>The full release is a ~79M-row warehouse hosted on Hugging Face behind a gated, token-based
+  flow built for interactive notebook sessions. The environment this capstone was finished in
+  couldn't reach that host or hold a live token, so every number below comes from the public
+  starter slice — stated once here, and true of every table and chart that follows.</p>
+  <h3>Excluded, and why</h3>
+  <ul>
+    <li><code>trend_direction</code>, <code>trend_pct</code> — these <i>define</i> the label used
+    throughout this paper. Using them as model inputs would be reading the answer key, confirmed
+    directly below.</li>
+    <li><code>client_id</code>, <code>content_id</code> — pseudonyms, used only to build the
+    client-grouped split, never as model inputs.</li>
+    <li>FlyRank's own product decision flags (a composite health score, a priority score, an
+    action type) — not shipped in this dataset at all, so nothing here can accidentally learn to
+    copy an existing system's answer instead of finding its own signal.</li>
+    <li>Every row already has <code>impressions_90d &gt; 0</code> and
+    <code>content_age_days &ge; 90</code> — brand-new and zero-visibility pages sit outside this
+    study's scope entirely.</li>
+  </ul>
+  <p>No client names, domains, real URLs, private queries, or credentials appear anywhere in this
+  repo or this page.</p>
+</section>
+
+<section id="methodology">
+  <h2>Methodology</h2>
+
+  <h3>Label</h3>
+  <p>The target, <code>is_declining_label</code>, is <code>trend_direction == "down"</code> — a
+  <b>proxy label</b> computed from a 30-day-vs-prior-30-day snapshot comparison, not an observed
+  future outcome. Every claim built on it below uses observed / directional / decision-support
+  language, never causal language.</p>
+
+  <h3>Baseline: a rule a human can read</h3>
+  <p>Two signal checks came first, each on its own bucket table with n printed:</p>
+  <table>
+    <thead><tr><th>Signal</th><th>Claim tested</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Staleness (behind FlyRank's refresh flags)</td>
+        <td>Longer since last update → more likely declining</td>
+        <td><span class="verdict mixed">MIXED</span></td>
+      </tr>
+      <tr>
+        <td>CTR vs. position (behind the CTR-fix logic)</td>
+        <td>CTR drops as position worsens</td>
+        <td><span class="verdict confirmed">CONFIRMED</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p>Staleness reversed at the exact 181+ day bucket the refresh flag targets (decline rate 47.1%,
+  n=174 — <i>below</i> the 54.2% overall base rate), so the baseline demotes it to a tie-breaker
+  rather than a gate. CTR fell monotonically from 2.76% (top-3 positions) to 0.15% (deep
+  positions) across every bucket (n=1,116 to 11,814), so the rule leans on it directly:</p>
+  <figure>
+    <img src="assets/ctr_by_position.png" alt="Bar chart showing mean CTR per page falling monotonically from top-3 position (2.76%) to deep position (0.15%), with sample sizes labeled above each bar.">
+    <figcaption><b>CTR falls as position worsens, at every step.</b> Mean CTR per page by
+    position tier, n labeled above each bar. The CTR-fix logic's assumption holds up in this
+    slice.</figcaption>
+  </figure>
+  <pre>eligible   = impressions_90d >= 500  AND  0 < avg_position <= 20
+ctr_gap    = eligible AND ctr < 0.5
+severity   = max(0, 0.5 - ctr)
+baseline_action_score = log1p(impressions_90d) * severity</pre>
+
+  <h3>Model</h3>
+  <p>Logistic Regression, then Random Forest — the toolkit's own recommendation for a "yes/no
+  with an observed label" question, readable first, stronger only if it earns the complexity. 18
+  numeric features (impressions, clicks, sessions, CTR, position, engagement rate, scroll rate,
+  content age, freshness, word/char count, search volume, competition, CPC, AI traffic — plus five
+  missingness flags) and 8 categorical features (content type, intent, competition level, and four
+  transparent tiers). None label-derived, none a product flag.</p>
+
+  <h3>Validation design</h3>
+  <p>Split <b>by client_id, not randomly</b>: content items from the same client share hidden
+  character (the same team, the same site authority) that a random split lets the model
+  memorize instead of learning something that transfers. The gap this choice makes is itself the
+  headline validation finding, reported in Results.</p>
+
+  <h3>Leakage checks</h3>
+  <p>The full attack checklist ran clean — label-derived columns excluded and confirmed absent,
+  no product flags exist in this dataset to accidentally include, population selection carries no
+  outcome-window information, split grouped by the repeating entity, base rate printed next to
+  every metric. The confession test: deliberately adding <code>trend_pct</code> back as a feature
+  pushes AUC from 0.604 to <b>0.998</b> — proof the test harness is actually sensitive to leakage,
+  and proof of exactly why that column stays out everywhere else in this project.</p>
+</section>
+
+<section id="results">
+  <h2>Results</h2>
+  <p>Same client-grouped holdout rows, same precision@K metric, for the baseline rule and both
+  models — the comparison the training-honest-models skill calls non-negotiable.</p>
+
+  <div class="stat-row">
+    <div class="stat"><div class="num">0.62</div><div class="stat-label">Baseline rule, precision@50</div></div>
+    <div class="stat"><div class="num win">0.76</div><div class="stat-label">Logistic regression, precision@50</div></div>
+    <div class="stat"><div class="num">0.54</div><div class="stat-label">Random forest, precision@50</div></div>
+    <div class="stat"><div class="num">0.56</div><div class="stat-label">Base rate in this holdout</div></div>
+  </div>
+
+  <figure>
+    <img src="assets/precision_at_k.png" alt="Grouped bar chart comparing precision at K=50, 100, and 250 for the baseline rule, logistic regression, and random forest, with a dashed line for the base rate.">
+    <figcaption><b>Logistic regression beats the baseline at every K; random forest doesn't
+    always.</b> Precision@K on the client-grouped holdout, base rate shown as the dashed line.
+    Random forest underperforms the simple rule at K=50 and only pulls ahead at K=250 — more
+    complexity did not automatically buy more precision where an editor actually starts reading.</figcaption>
+  </figure>
+
+  <table>
+    <caption>Precision@K, client-grouped holdout (base rate 0.559)</caption>
+    <thead><tr><th>K</th><th class="num">Baseline rule</th><th class="num">Logistic regression</th><th class="num">Random forest</th></tr></thead>
+    <tbody>
+      <tr><td>50</td><td class="num">0.620</td><td class="num">0.760</td><td class="num">0.540</td></tr>
+      <tr><td>100</td><td class="num">0.670</td><td class="num">0.690</td><td class="num">0.570</td></tr>
+      <tr><td>250</td><td class="num">0.676</td><td class="num">0.712</td><td class="num">0.628</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <h4>THE VALIDATION FINDING THAT MATTERED MOST</h4>
+    <p style="margin:0">A naive random split reported <b>AUC 0.694</b> for the same model on the
+    same data. The honest, client-grouped split reports <b>AUC 0.604</b> — a real 0.09-point gap
+    that is memorization, not skill: a random split lets rows from the same client land on both
+    sides of train and test, so the model partly learns "this client's pages behave like X"
+    instead of a pattern that transfers to a client it has never seen. 0.604 is the number used
+    everywhere else in this paper.</p>
+  </div>
+</section>
+
+<section id="limitations">
+  <h2>Limitations &amp; honest framing</h2>
+  <ul>
+    <li><b>Proxy label, not a future outcome.</b> <code>is_declining_label</code> is a
+    current-window snapshot classification, not "this page will decline next month." A stronger
+    version of this project — predicting a genuinely future window — is future work.</li>
+    <li><b>Cross-sectional, non-experimental data.</b> No A/B test, no control group. Nothing here
+    can claim refreshing a page <i>causes</i> recovery — only that certain pages are, in this
+    slice, more often labeled declining.</li>
+    <li><b>One 30,000-row slice of a ~79M-row warehouse.</b> Every number is "observed in this
+    slice," never "true of FlyRank clients in general."</li>
+    <li><b>Client-grouped evaluation isn't a guarantee on a genuinely new client</b> — it only
+    proves the model isn't purely memorizing the 22 clients it trained on. Applying it to an
+    unseen client without re-validation would be trusting an unvalidated number.</li>
+    <li><b>The label is noisy at the row level.</b> Individual wrong cases (Section 4 of the
+    modeling notebook) show plausible model reasoning disagreeing with a 30-day snapshot label —
+    a property of the label's short window, not necessarily a model failure.</li>
+    <li><b>No claim about Google's ranking algorithm.</b> Only search-console-style outcomes are
+    observed here — never the mechanism that produces them.</li>
+  </ul>
+</section>
+
+<section id="recommendations">
+  <h2>Ranked recommendations</h2>
+  <p>The final queue blends the model with the transparent baseline —
+  <code>100 × (0.70 × model_probability + 0.30 × normalized_baseline_score)</code> — so the
+  ranking leans on the model's lift while staying anchored to a rule an editor can still read.</p>
+
+  <figure>
+    <img src="assets/decline_rate_by_reason_code.png" alt="Horizontal bar chart showing observed decline rate for each reason code, with model_decline_risk highest at 73.7% and monitor lowest at 39.9%, dashed line for overall base rate of 54.2%.">
+    <figcaption><b>Every reason code but "monitor" sits above the base rate.</b> Observed decline
+    rate by reason code in the final ranked queue, n labeled beside each bar. <code>model_decline_risk</code>
+    carries the clearest lift (73.7% vs. a 54.2% base rate).</figcaption>
+  </figure>
+
+  <table>
+    <caption>Final ranked queue by reason code (30,000 rows)</caption>
+    <thead><tr><th>Reason code</th><th>Action</th><th class="num">Decline rate</th><th class="num">n</th></tr></thead>
+    <tbody>
+      <tr><td><code>model_decline_risk</code></td><td>Priority refresh</td><td class="num">73.7%</td><td class="num">9,643</td></tr>
+      <tr><td><code>ctr_review_candidate</code></td><td>Review CTR &amp; meta</td><td class="num">53.4%</td><td class="num">5,343</td></tr>
+      <tr><td><code>visible_model_opportunity</code></td><td>Light-touch review</td><td class="num">52.4%</td><td class="num">1,084</td></tr>
+      <tr><td><code>engagement_review_candidate</code></td><td>Review content depth</td><td class="num">47.0%</td><td class="num">2,458</td></tr>
+      <tr><td><i>none fired</i></td><td>Monitor</td><td class="num">39.9%</td><td class="num">11,472</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Intended use, and where it stops being valid</h3>
+  <p>A weekly triage aid for a content editor on a client already represented in this training
+  portfolio — never an automated edit, never a causal promise, and never trusted at face value on
+  a brand-new client without re-validating the grouped-holdout numbers first.</p>
+
+  <h3>What a human must check before acting</h3>
+  <ul>
+    <li>Whether a near-zero CTR on high impressions is a real content problem or a tracking
+    artifact — both are equally consistent with the data.</li>
+    <li>Whether several top-ranked pages from the same client point to a client-level issue
+    rather than independent content problems.</li>
+    <li>Whether the page's intent (e.g. branded/navigational) makes "low CTR" mean something other
+    than a weak snippet.</li>
+  </ul>
+</section>
+
+<section id="reproducibility">
+  <h2>Reproducibility</h2>
+  <p>Every table and chart on this page comes from a notebook in this repo, executed top to
+  bottom, with fixed random seeds (<code>random_state=42</code> throughout).</p>
+  <div class="repro-grid">
+    <a href="https://github.com/umaimakhalid17/ML/blob/main/work/notebooks/w04_baseline_score.ipynb">w04 — baseline rule + signal checks</a>
+    <a href="https://github.com/umaimakhalid17/ML/blob/main/work/notebooks/w05_model.ipynb">w05 — model vs. baseline</a>
+    <a href="https://github.com/umaimakhalid17/ML/blob/main/work/notebooks/w06_validation_audit.ipynb">w06 — validation &amp; leakage audit</a>
+    <a href="https://github.com/umaimakhalid17/ML/blob/main/work/notebooks/w07_action_playbook.ipynb">w07 — final action playbook</a>
+    <a href="https://github.com/umaimakhalid17/ML/blob/main/work/notebooks/capstone.ipynb">Capstone notebook (mirrors this page)</a>
+    <a href="https://github.com/umaimakhalid17/ML">Full repository</a>
+  </div>
+</section>
+
+<section id="credit">
+  <h2>Acknowledgments &amp; data credit</h2>
+  <p>Built on the FlyRank ML Internship dataset. Data and program credit:
+  <a href="https://flyrank.ai">flyrank.ai</a>.</p>
+</section>
+
+</main>
+
+<footer>
+  <p>Umaima Khalid — FlyRank ML Internship capstone, Lane 2 (Refresh / Content Opportunity
+  Scoring). No client names, domains, private queries, or credentials appear on this page or in
+  the linked repository.</p>
+</footer>
+
+</body>
+</html>

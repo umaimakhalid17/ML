@@ -1,0 +1,31 @@
+{
+  "split": "GroupShuffleSplit by client_id, test_size=0.30, random_state=42",
+  "train_rows": 19166,
+  "test_rows": 10834,
+  "train_clients": 22,
+  "test_clients": 10,
+  "client_overlap": 0,
+  "auc": {
+    "logistic_regression": 0.604,
+    "random_forest": 0.615
+  },
+  "precision_at_k": {
+    "50": {
+      "baseline": 0.62,
+      "logistic_regression": 0.76,
+      "random_forest": 0.54
+    },
+    "100": {
+      "baseline": 0.67,
+      "logistic_regression": 0.69,
+      "random_forest": 0.57
+    },
+    "250": {
+      "baseline": 0.676,
+      "logistic_regression": 0.712,
+      "random_forest": 0.628
+    }
+  },
+  "base_rate_test_fold": 0.559,
+  "winning_model": "logistic_regression"
+}

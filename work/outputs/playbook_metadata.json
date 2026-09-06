@@ -1,0 +1,38 @@
+{
+  "rows": 30000,
+  "reason_code_counts": {
+    "monitor": 11472,
+    "model_decline_risk": 9643,
+    "ctr_review_candidate": 5343,
+    "engagement_review_candidate": 2458,
+    "visible_model_opportunity": 1084
+  },
+  "decline_rate_by_reason_code": {
+    "ctr_review_candidate": 0.5343,
+    "engagement_review_candidate": 0.4699,
+    "model_decline_risk": 0.7373,
+    "monitor": 0.3987,
+    "visible_model_opportunity": 0.524
+  },
+  "decline_rate_overall": 0.5421,
+  "score_formula": "100 * (0.70 * model_proba + 0.30 * baseline_norm)",
+  "held_out_reference_metrics": {
+    "grouped_split_auc": 0.604,
+    "random_split_auc": 0.694,
+    "precision_at_50": {
+      "baseline": 0.62,
+      "logistic_regression": 0.76,
+      "random_forest": 0.54
+    },
+    "precision_at_100": {
+      "baseline": 0.67,
+      "logistic_regression": 0.69,
+      "random_forest": 0.57
+    },
+    "precision_at_250": {
+      "baseline": 0.676,
+      "logistic_regression": 0.712,
+      "random_forest": 0.628
+    }
+  }
+}

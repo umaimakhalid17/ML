@@ -1,0 +1,13 @@
+{
+  "random_split_auc": 0.694,
+  "grouped_split_auc": 0.604,
+  "gap": 0.09,
+  "leakage_test": {
+    "honest_auc": 0.604,
+    "leaky_auc_with_trend_pct": 0.998
+  },
+  "paper_findings_reviewed": [
+    "Finding #4: The Freshness Multiplier (selection bias / causal-language critique)",
+    "Finding #1: The Anatomy of Growing Content (proxy-label / cross-sectional critique)"
+  ]
+}
